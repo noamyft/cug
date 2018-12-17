@@ -1,13 +1,16 @@
 package mutators;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.sun.javafx.fxml.expression.BinaryExpression;
 
-import java.util.HashSet;
+import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static com.github.javaparser.ast.expr.BinaryExpr.Operator.*;
 import static com.github.javaparser.ast.expr.BinaryExpr.Operator.GREATER;
@@ -16,42 +19,54 @@ import static com.github.javaparser.ast.expr.BinaryExpr.Operator.GREATER_EQUALS;
 /**
  * Cos mutator - swap operands in commutative operations
  */
-public class CosMutator extends VoidVisitorAdapter<HashSet<MethodDeclaration>> {
+public class CosMutator extends AMutator {
 
-    private MethodDeclaration originalMethod;
-    private Supplier<Boolean> booleanRandomizer;
+    List<BinaryExpr> allBinaryExpr;
 
     /*use these methonds in all mutators*/
     public CosMutator(MethodDeclaration method){
-        this(method, () -> true);
+        this(method, Integer.MAX_VALUE);
     }
-    public CosMutator(MethodDeclaration method, Supplier<Boolean> booleanRandomizer) {
-        this.originalMethod = method;
-        this.booleanRandomizer = booleanRandomizer;
-    }
-    public void addMutant(HashSet<MethodDeclaration> mutants){
-        mutants.add(originalMethod.clone());
+    public CosMutator(MethodDeclaration method, int maxMutants) {
+        super(method,maxMutants);
+
+        allBinaryExpr = new ArrayList<>();
+
+        getAllNodeOfClass(method, allBinaryExpr, BinaryExpr.class);
+
+        allBinaryExpr = allBinaryExpr.stream().filter(binaryExpr -> {
+            BinaryExpr.Operator op_type = binaryExpr.getOperator();
+            return ((op_type == BinaryExpr.Operator.PLUS) ||
+                    (op_type == BinaryExpr.Operator.MULTIPLY));
+        }).collect(Collectors.toList());
+
     }
     /*use these methonds in all mutators - until here*/
 
-
     @Override
-    public void visit(BinaryExpr exp, HashSet<MethodDeclaration> arg) {
+    public HashSet<MethodDeclaration> getMutants() {
+
+        Collections.shuffle(allBinaryExpr);
+
+        HashSet<MethodDeclaration> result = new HashSet<>();
+
+        for (BinaryExpr b : allBinaryExpr){
+            //limit the number of mutants
+            if (result.size() >= this.maxMutants) {
+                return result;
+            }
+
+            result.add(generateMutant(b));
+        }
+
+        return result;
+    }
+
+    public MethodDeclaration generateMutant(BinaryExpr exp) {
             /* here you need to make the desired mutation.
              after make the mutation, call addMutant (to add it to the list)
              and after that restore originalMethod to it original state
              (the code before your changes) */
-
-        //limit the number of mutants
-//        if (arg.size() > 20) {
-//            return;
-//        }
-
-        //decide whether mutant this not or not
-        if (!this.booleanRandomizer.get()){
-            super.visit(exp, arg);
-            return;
-        }
 
         Expression left = exp.getLeft();
         Expression right = exp.getRight();
@@ -63,21 +78,17 @@ public class CosMutator extends VoidVisitorAdapter<HashSet<MethodDeclaration>> {
             swapOperandsMutantGen(exp, left, right);
 
             /* add mutant and restore original method*/
-            addMutant(arg);
+            MethodDeclaration mutant = originalMethod.clone();
             exp.setLeft(left);
             exp.setRight(right);
 
+            return mutant;
         }
-
-        super.visit(exp, arg);
+        throw new RuntimeException(this.getClass() + " must generate mutant! cannot reach here");
     }
 
     private void swapOperandsMutantGen(BinaryExpr exp, Expression left, Expression right) {
         BinaryExpression mutant;
-
-        /**
-         * the traditional ROR implementation
-         */
 
         exp.setRight(left);
         exp.setLeft(right);

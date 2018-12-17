@@ -1,24 +1,33 @@
 package mutators;
 
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import common.MethodMutantData;
+
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 public abstract class AMutator {
 
-    private MethodDeclaration originalMethod;
-    private HashSet<MethodDeclaration> mutants;
+    protected int maxMutants;
+    protected MethodDeclaration originalMethod;
+//    private HashSet<MethodDeclaration> mutants;
 
-    public AMutator(MethodDeclaration method){
+    public AMutator(MethodDeclaration method, int maxMutants){
         this.originalMethod = method;
-        mutants = new HashSet<MethodDeclaration>();
+        this.maxMutants = maxMutants;
     }
 
-    public HashSet<MethodDeclaration> getMutants(){
-        return mutants;
-    }
+    public abstract HashSet<MethodDeclaration>  getMutants();
 
-    public void addMutant(){
-        mutants.add(originalMethod.clone());
+    protected static<T extends Node> void getAllNodeOfClass(Node node, List<T> result, Class<T> nodeCls){
+        if (node.getClass().equals(nodeCls)){
+            result.add((T)node);
+        }
+        for (Node child : node.getChildNodes()){
+            getAllNodeOfClass(child, result, nodeCls);
+        }
     }
 
 }

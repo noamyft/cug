@@ -8,49 +8,71 @@ import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.sun.javafx.fxml.expression.BinaryExpression;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static com.github.javaparser.ast.expr.BinaryExpr.Operator.*;
 
 /**
  * Ros mutator - swap operands in comparison operators
  */
-public class RosMutator extends VoidVisitorAdapter<HashSet<MethodDeclaration>> {
+public class RosMutator extends AMutator {
 
-    private Supplier<Boolean> booleanRandomizer;
-    private MethodDeclaration originalMethod;
+    List<BinaryExpr> allBinaryExpr;
 
     /*use these methonds in all mutators*/
     public RosMutator(MethodDeclaration method){
-        this(method, () -> true);
+        this(method, Integer.MAX_VALUE);
     }
-    public RosMutator(MethodDeclaration method, Supplier<Boolean> booleanRandomizer) {
-        this.originalMethod = method;
-        this.booleanRandomizer = booleanRandomizer;
-    }
-    public void addMutant(HashSet<MethodDeclaration> mutants){
-        mutants.add(originalMethod.clone());
+    public RosMutator(MethodDeclaration method, int maxMutants) {
+        super(method,maxMutants);
+
+        allBinaryExpr = new ArrayList<>();
+
+        getAllNodeOfClass(method, allBinaryExpr, BinaryExpr.class);
+
+        allBinaryExpr = allBinaryExpr.stream().filter(binaryExpr -> {
+            BinaryExpr.Operator op_type = binaryExpr.getOperator();
+            return ((op_type == EQUALS) ||
+                    (op_type == NOT_EQUALS) ||
+                    (op_type == GREATER) ||
+                    (op_type == GREATER_EQUALS) ||
+                    (op_type == LESS) ||
+                    (op_type == LESS_EQUALS));
+        }).collect(Collectors.toList());
+
     }
     /*use these methonds in all mutators - until here*/
 
     @Override
-    public void visit(BinaryExpr exp, HashSet<MethodDeclaration> arg) {
+    public HashSet<MethodDeclaration> getMutants() {
+
+        Collections.shuffle(allBinaryExpr);
+
+        HashSet<MethodDeclaration> result = new HashSet<>();
+
+        for (BinaryExpr b : allBinaryExpr){
+            //limit the number of mutants
+            if (result.size() >= this.maxMutants) {
+                return result;
+            }
+
+            result.add(generateMutant(b));
+        }
+
+        return result;
+    }
+
+    private MethodDeclaration generateMutant(BinaryExpr exp) {
             /* here you need to make the desired mutation.
              after make the mutation, call addMutant (to add it to the list)
              and after that restore originalMethod to it original state
              (the code before your changes) */
 
-        //limit the number of mutants
-//        if (arg.size() > 20) {
-//            return;
-//        }
-
-        //decide whether mutant this not or not
-        if (!this.booleanRandomizer.get()){
-            super.visit(exp, arg);
-            return;
-        }
 
         Expression left = exp.getLeft();
         Expression right = exp.getRight();
@@ -67,14 +89,15 @@ public class RosMutator extends VoidVisitorAdapter<HashSet<MethodDeclaration>> {
 
 
             /* add mutant and restore original method*/
-            addMutant(arg);
+            MethodDeclaration mutant = originalMethod.clone();
             exp.setLeft(left);
             exp.setRight(right);
             exp.setOperator(op_type);
 
+            return mutant;
         }
 
-        super.visit(exp, arg);
+        throw new RuntimeException(this.getClass() + " must generate mutant! cannot reach here");
     }
 
     private void swapRelationalOperandsMutantGen(BinaryExpr exp, Expression left, Expression right, BinaryExpr.Operator op_type) {

@@ -26,6 +26,13 @@ public class CommandLineValues {
 //
     @Option(name = "--num_threads", required = false)
     public int NumThreads = 32;
+
+    @Option(name = "--max_mutants_per_mutator", required = false)
+    public int MaxMutantsPerMutator = Integer.MAX_VALUE;
+
+//    @Option(name = "--mutation_rate", required = false)
+//    public double MutationRate = 1;
+
 //
 //    @Option(name = "--min_code_len", required = false)
 //    public int MinCodeLength = 1;
@@ -36,8 +43,7 @@ public class CommandLineValues {
 //    @Option(name = "--pretty_print", required = false)
 //    public boolean PrettyPrint = false;
 //
-//    @Option(name = "--max_child_id", required = false)
-//    public int MaxChildId = Integer.MAX_VALUE;
+
 
     public CommandLineValues(String... args) throws CmdLineException {
         CmdLineParser parser = new CmdLineParser(this);

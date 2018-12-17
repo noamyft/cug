@@ -1,5 +1,6 @@
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.*;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
@@ -34,7 +35,7 @@ public class Main {
         Path outputFolder = Paths.get(s_CommandLineValues.Out);
 
         if (s_CommandLineValues.File != null) {
-            mutateFile(outputFolder, s_CommandLineValues.File, s_CommandLineValues.MutationLevel);
+            mutateFile(outputFolder, s_CommandLineValues.File, s_CommandLineValues);
         } else if (s_CommandLineValues.Dir != null) {
             mutateDir(s_CommandLineValues);
         }
@@ -43,8 +44,8 @@ public class Main {
 //        // parse it
 //        FileInputStream in = new FileInputStream("Aug.java");
 //        CompilationUnit cu = JavaParser.parse(in);
-//
-//            // Go through all the types in the file
+
+            // Go through all the types in the file
 //            NodeList<TypeDeclaration<?>> types = cu.getTypes();
 //            for (TypeDeclaration<?> type : types) {
 //                // Go through all fields, methods, etc. in this type
@@ -66,7 +67,7 @@ public class Main {
 
     }
 
-    private static void mutateFile(Path outputFolder, File file, int mutationLevel) {
+    private static void mutateFile(Path outputFolder, File file, CommandLineValues config) {
         // creates an input stream for the file to be parsed
         FileInputStream in = null;
         try {
@@ -80,19 +81,19 @@ public class Main {
 
         List<MethodMutantData> methodMutants = new LinkedList<>();
         // visit and print the methods names
-        cu.accept(new MethodVisitor(), methodMutants);
+        cu.accept(new MethodVisitor(config), methodMutants);
 
-        if (mutationLevel > 1){
+        if (config.MutationLevel > 1){
             for (MethodMutantData m : methodMutants) {
                 Set<MethodDeclaration> oldMutants = m.getMutants();
-                for (int i=1; i < mutationLevel; i++){
+                for (int i=1; i < config.MutationLevel; i++){
 
                     Set<MethodDeclaration> newMutants =
                             oldMutants.stream()
                                     .map(methodDeclaration -> {
                                         List<MethodMutantData> mutants = new LinkedList<>();
 
-                                         methodDeclaration.accept(new MethodVisitor(), mutants);
+                                         methodDeclaration.accept(new MethodVisitor(config), mutants);
                                          assert mutants.size() == 1;
                                          return mutants.get(0);
                                     })
@@ -104,9 +105,9 @@ public class Main {
                     oldMutants = newMutants;
 
                     //breaks if num of mutants exceeded the thresh
-                    if (m.getMutants().size() > 5000){
-                        break;
-                    }
+//                    if (m.getMutants().size() > 5000){
+//                        break;
+//                    }
                 }
             }
         }
@@ -156,7 +157,7 @@ public class Main {
                     .filter(p -> p.toString().toLowerCase().endsWith(".java"))
                     .forEach(f -> {
                         tasks.add(() -> {
-                            mutateFile(outputFolder, f.toFile(), s_CommandLineValues.MutationLevel);
+                            mutateFile(outputFolder, f.toFile(), s_CommandLineValues);
                             return null;
                         });
                     });
