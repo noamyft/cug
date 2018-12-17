@@ -1,16 +1,16 @@
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.*;
+import com.github.javaparser.ast.expr.VariableDeclarationExpr;
+import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import common.CommandLineValues;
 import common.MethodMutantData;
 import org.kohsuke.args4j.CmdLineException;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -18,7 +18,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Main {
 
@@ -40,9 +39,31 @@ public class Main {
             mutateDir(s_CommandLineValues);
         }
 
+//         TODO: FOR DEBUGING
+//        // parse it
+//        FileInputStream in = new FileInputStream("Aug.java");
+//        CompilationUnit cu = JavaParser.parse(in);
+//
+//            // Go through all the types in the file
+//            NodeList<TypeDeclaration<?>> types = cu.getTypes();
+//            for (TypeDeclaration<?> type : types) {
+//                // Go through all fields, methods, etc. in this type
+//                NodeList<BodyDeclaration<?>> members = type.getMembers();
+//                for (BodyDeclaration<?> member : members) {
+//                    if (member instanceof MethodDeclaration) {
+//                        MethodDeclaration method = (MethodDeclaration) member;
+//                    }
+//                }
+//            }
 
-        // prints the resulting compilation unit to default system output
+            // visit and print the methods names
+//            cu.accept(new TestVisitor(), null);
+
+        //         prints the resulting compilation unit to default system output
 //        System.out.println(cu.toString());
+//         END: FOR DEBUGING
+
+
     }
 
     private static void mutateFile(Path outputFolder, File file, int mutationLevel) {
@@ -97,7 +118,7 @@ public class Main {
 
             if (!m.getMutants().isEmpty()) {
                 //create dir
-                Path methodFolder = generateUniqueName(outputFolder, m.getMethodClassName());
+                Path methodFolder = generateUniqueFolderName(outputFolder, m.getMethodClassName());
                 methodFolder.toFile().mkdirs();
 
                 PrintWriter writer = null;
@@ -154,16 +175,49 @@ public class Main {
 
     }
 
-    private static Path generateUniqueName(Path outputFolder, String originalName){
+    private static Path generateUniqueFolderName(Path outputFolder, String originalName){
         int i = 0;
-        Path methodFolder = Paths.get(outputFolder.toAbsolutePath().toString(), originalName, "src");
+        Path methodFolder = Paths.get(outputFolder.toAbsolutePath().toString(), originalName.toLowerCase(), "src");
         while (methodFolder.toFile().exists()) {
             i++;
-            methodFolder = Paths.get(outputFolder.toAbsolutePath().toString(), originalName + "__" + i, "src");
+            methodFolder = Paths.get(outputFolder.toAbsolutePath().toString(), originalName.toLowerCase() + "__" + i, "src");
         }
         return methodFolder;
     }
 
+    /**
+     * Simple visitor implementation for visiting MethodDeclaration nodes.
+     */
+    private static class TestVisitor extends VoidVisitorAdapter<Void> {
+//        @Override
+//        public void visit(NameExpr n, Void arg) {
+//            /* here you can access the attributes of the method.
+//             this method will be called for all methods in this
+//             CompilationUnit, including inner class methods */
+//            if (n.toString().equals("n")) {
+//                System.out.println(n + "--" + n.getParentNode().get() + "--" + n.getParentNode().get().getParentNode().get());
+//            }
+//
+//            super.visit(n, arg);
+//        }
+        @Override
+        public void visit(VariableDeclarationExpr n, Void arg)
+        {
+            List <VariableDeclarator> myVars = n.getVariables();
+            for (VariableDeclarator vars: myVars){
+                System.out.println("Variable Name: "+vars.getName());
+            }
+        }
+
+        @Override
+        public void visit(Parameter n, Void arg)
+        {
+//            List <VariableDeclarator> myVars = n.getVariables();
+//            for (VariableDeclarator vars: myVars){
+                System.out.println("Param Name: "+n.getName());
+//            }
+        }
+    }
     /**
      * Simple visitor implementation for visiting MethodDeclaration nodes.
      */
