@@ -9,6 +9,7 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.sun.javafx.fxml.expression.BinaryExpression;
 
 import java.util.HashSet;
+import java.util.function.Supplier;
 
 import static com.github.javaparser.ast.expr.BinaryExpr.Operator.*;
 
@@ -17,11 +18,16 @@ import static com.github.javaparser.ast.expr.BinaryExpr.Operator.*;
  */
 public class RosMutator extends VoidVisitorAdapter<HashSet<MethodDeclaration>> {
 
+    private Supplier<Boolean> booleanRandomizer;
     private MethodDeclaration originalMethod;
 
     /*use these methonds in all mutators*/
     public RosMutator(MethodDeclaration method){
+        this(method, () -> true);
+    }
+    public RosMutator(MethodDeclaration method, Supplier<Boolean> booleanRandomizer) {
         this.originalMethod = method;
+        this.booleanRandomizer = booleanRandomizer;
     }
     public void addMutant(HashSet<MethodDeclaration> mutants){
         mutants.add(originalMethod.clone());
@@ -36,7 +42,13 @@ public class RosMutator extends VoidVisitorAdapter<HashSet<MethodDeclaration>> {
              (the code before your changes) */
 
         //limit the number of mutants
-        if (arg.size() > 20) {
+//        if (arg.size() > 20) {
+//            return;
+//        }
+
+        //decide whether mutant this not or not
+        if (!this.booleanRandomizer.get()){
+            super.visit(exp, arg);
             return;
         }
 

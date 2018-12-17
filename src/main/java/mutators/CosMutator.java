@@ -7,6 +7,7 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.sun.javafx.fxml.expression.BinaryExpression;
 
 import java.util.HashSet;
+import java.util.function.Supplier;
 
 import static com.github.javaparser.ast.expr.BinaryExpr.Operator.*;
 import static com.github.javaparser.ast.expr.BinaryExpr.Operator.GREATER;
@@ -18,10 +19,15 @@ import static com.github.javaparser.ast.expr.BinaryExpr.Operator.GREATER_EQUALS;
 public class CosMutator extends VoidVisitorAdapter<HashSet<MethodDeclaration>> {
 
     private MethodDeclaration originalMethod;
+    private Supplier<Boolean> booleanRandomizer;
 
     /*use these methonds in all mutators*/
     public CosMutator(MethodDeclaration method){
+        this(method, () -> true);
+    }
+    public CosMutator(MethodDeclaration method, Supplier<Boolean> booleanRandomizer) {
         this.originalMethod = method;
+        this.booleanRandomizer = booleanRandomizer;
     }
     public void addMutant(HashSet<MethodDeclaration> mutants){
         mutants.add(originalMethod.clone());
@@ -37,7 +43,13 @@ public class CosMutator extends VoidVisitorAdapter<HashSet<MethodDeclaration>> {
              (the code before your changes) */
 
         //limit the number of mutants
-        if (arg.size() > 20) {
+//        if (arg.size() > 20) {
+//            return;
+//        }
+
+        //decide whether mutant this not or not
+        if (!this.booleanRandomizer.get()){
+            super.visit(exp, arg);
             return;
         }
 

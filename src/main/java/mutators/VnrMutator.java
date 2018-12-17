@@ -1,32 +1,21 @@
-package mutators.stochasticmutators;
+package mutators;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import com.sun.javafx.fxml.expression.BinaryExpression;
-import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.expr.BinaryExpr;
-import com.github.javaparser.ast.expr.Expression;
-import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import com.sun.javafx.fxml.expression.BinaryExpression;
 
 import java.util.*;
 
-import static com.github.javaparser.ast.expr.BinaryExpr.Operator.*;
-import static com.github.javaparser.ast.expr.BinaryExpr.Operator.GREATER;
-import static com.github.javaparser.ast.expr.BinaryExpr.Operator.GREATER_EQUALS;
-
 import java.util.HashSet;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
  * Vnr mutator -
  */
-public class VnrStochasticMutator extends VoidVisitorAdapter<HashSet<MethodDeclaration>> {
+public class VnrMutator extends VoidVisitorAdapter<HashSet<MethodDeclaration>> {
 
     private MethodDeclaration originalMethod;
     private Supplier<Boolean> booleanRandomizer;
@@ -35,11 +24,11 @@ public class VnrStochasticMutator extends VoidVisitorAdapter<HashSet<MethodDecla
     private Map<String,String> refactorVariables;
 
     /*use these methonds in all mutators*/
-    public VnrStochasticMutator(MethodDeclaration method){
+    public VnrMutator(MethodDeclaration method){
         this(method, () -> true);
     }
 
-    public VnrStochasticMutator(MethodDeclaration method, Supplier<Boolean> booleanRandomizer){
+    public VnrMutator(MethodDeclaration method, Supplier<Boolean> booleanRandomizer){
         this.originalMethod = method;
         this.booleanRandomizer = booleanRandomizer;
         this.variables = new HashSet<>();
@@ -90,9 +79,9 @@ public class VnrStochasticMutator extends VoidVisitorAdapter<HashSet<MethodDecla
 
         for (String v : this.variables){
             //limit the number of mutants
-            if (arg.size() > 20) {
-                return;
-            }
+//            if (arg.size() > 20) {
+//                return;
+//            }
 
             if (!this.booleanRandomizer.get()){
                 continue;
