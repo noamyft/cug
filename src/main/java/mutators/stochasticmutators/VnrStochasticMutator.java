@@ -88,12 +88,12 @@ public class VnrStochasticMutator extends VoidVisitorAdapter<HashSet<MethodDecla
              and after that restore originalMethod to it original state
              (the code before your changes) */
 
-        //limit the number of mutants
-        if (arg.size() > 20) {
-            return;
-        }
-
         for (String v : this.variables){
+            //limit the number of mutants
+            if (arg.size() > 20) {
+                return;
+            }
+
             if (!this.booleanRandomizer.get()){
                 continue;
             }
