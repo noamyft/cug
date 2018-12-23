@@ -12,9 +12,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -102,7 +100,16 @@ public class Main {
                                     .collect(Collectors.toSet());
 
                     m.addMutants(newMutants);
-                    oldMutants = newMutants;
+
+                    //limit the beam
+                    if (newMutants.size() < config.MaxDevelopedMutantsPerIteration){
+                        oldMutants = newMutants;
+                    } else {
+                        ArrayList<MethodDeclaration> limitedSet = new ArrayList<MethodDeclaration>(newMutants);
+                        Collections.shuffle(limitedSet);
+                        oldMutants = new HashSet<>(limitedSet.subList(0, config.MaxDevelopedMutantsPerIteration));
+                    }
+
 
                     //breaks if num of mutants exceeded the thresh
 //                    if (m.getMutants().size() > 5000){

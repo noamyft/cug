@@ -30,6 +30,9 @@ public class CommandLineValues {
     @Option(name = "--max_mutants_per_mutator", required = false)
     public int MaxMutantsPerMutator = Integer.MAX_VALUE;
 
+    @Option(name = "--max_dev_mut_per_iteration", required = false)
+    public int MaxDevelopedMutantsPerIteration = Integer.MAX_VALUE;
+
 //    @Option(name = "--mutation_rate", required = false)
 //    public double MutationRate = 1;
 
