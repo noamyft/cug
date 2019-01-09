@@ -9,7 +9,10 @@ public class MethodMutantData {
 
     String className;
     MethodDeclaration originalMethod;
-    Set<MethodDeclaration> mutants;
+
+    int requestedMutationLevel;
+    int actualMutationLevel;
+    Set<MutantLog> mutants;
 
     public String getMethodClassName() {
         return className + "_" + originalMethod.getNameAsString();
@@ -23,7 +26,7 @@ public class MethodMutantData {
         return originalMethod;
     }
 
-    public Set<MethodDeclaration> getMutants() {
+    public Set<MutantLog> getMutants() {
         return mutants;
     }
 
@@ -31,13 +34,31 @@ public class MethodMutantData {
         this.className = "";
         this.originalMethod = originalMethod;
         this.mutants = new HashSet<>();
+        requestedMutationLevel = 0;
+        actualMutationLevel = 0;
+    }
+
+    public int getRequestedMutationLevel() {
+        return requestedMutationLevel;
+    }
+
+    public int getActualMutationLevel() {
+        return actualMutationLevel;
+    }
+
+    public void setRequestedMutationLevel(int requestedMutationLevel) {
+        this.requestedMutationLevel = requestedMutationLevel;
+    }
+
+    public void setActualMutationLevel(int actualMutationLevel) {
+        this.actualMutationLevel = actualMutationLevel;
     }
 
     public void setClassName(String className) {
         this.className = className;
     }
 
-    public void addMutants(Set<MethodDeclaration> mutants){
-        this.mutants.addAll(mutants);
+    public void addMutantToLog(Set<MutantLog> mutantLogs){
+        this.mutants.addAll(mutantLogs);
     }
 }

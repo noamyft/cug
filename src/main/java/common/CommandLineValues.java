@@ -1,6 +1,8 @@
 package common;
 
 import java.io.File;
+import java.nio.file.Path;
+
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -9,8 +11,17 @@ import org.kohsuke.args4j.Option;
  * This class handles the programs arguments.
  */
 public class CommandLineValues {
+    @Option(name = "--extract_methods", required = false, forbids={"--output_mutants", "--mutate_methods","--mutation_level", "--from", "--to"})
+    public boolean ExtractMethods = false;
+
+    @Option(name = "--mutate_methods", required = false, forbids={"--output_mutants", "--extract_methods", "--from", "--to", "--output"})
+    public boolean MutateMethods = false;
+
+    @Option(name = "--output_mutants", required = false, forbids={"--mutate_methods", "--extract_methods", "--mutation_level"})
+    public boolean OutputMethods = false;
+
     @Option(name = "--file", required = false)
-    public File File = null;
+    public String File = null;
 
     @Option(name = "--dir", required = false, forbids = "--file")
     public String Dir = null;
@@ -27,11 +38,17 @@ public class CommandLineValues {
     @Option(name = "--num_threads", required = false)
     public int NumThreads = 32;
 
-    @Option(name = "--max_mutants_per_mutator", required = false)
-    public int MaxMutantsPerMutator = Integer.MAX_VALUE;
+    @Option(name = "--from", required = false)
+    public int FromLevel = 0;
 
-    @Option(name = "--max_dev_mut_per_iteration", required = false)
-    public int MaxDevelopedMutantsPerIteration = Integer.MAX_VALUE;
+    @Option(name = "--to", required = false)
+    public int ToLevel = Integer.MAX_VALUE;
+
+//    @Option(name = "--max_mutants_per_mutator", required = false)
+//    public int MaxMutantsPerMutator = Integer.MAX_VALUE;
+
+//    @Option(name = "--max_dev_mut_per_iteration", required = false)
+//    public int MaxDevelopedMutantsPerIteration = Integer.MAX_VALUE;
 
 //    @Option(name = "--mutation_rate", required = false)
 //    public double MutationRate = 1;

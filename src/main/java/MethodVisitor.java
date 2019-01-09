@@ -11,14 +11,17 @@ import mutators.VnrMutator;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class MethodVisitor extends VoidVisitorAdapter<List<MethodMutantData>>  {
 
     CommandLineValues config;
+    Set<MethodDeclaration> existingMethods;
 
-    public MethodVisitor(CommandLineValues config){
+    public MethodVisitor(CommandLineValues config, Set<MethodDeclaration> existingMethods){
         this.config = config;
+        this.existingMethods = existingMethods;
     }
 
     @Override
@@ -29,14 +32,14 @@ public class MethodVisitor extends VoidVisitorAdapter<List<MethodMutantData>>  {
         MethodMutantData methodMutantData = new MethodMutantData(n);
 
         //TODO add mutators here
-        AMutator[] mutators = new AMutator[]
-                {new RosMutator(n, config.MaxMutantsPerMutator),
-                        new CosMutator(n, config.MaxMutantsPerMutator),
-                        new VnrMutator(n, config.MaxMutantsPerMutator)};
+//        AMutator[] mutators = new AMutator[]
+//                {new RosMutator(n, config.MaxMutantsPerMutator),
+//                        new CosMutator(n, config.MaxMutantsPerMutator),
+//                        new VnrMutator(n, config.MaxMutantsPerMutator)};
 
-        for (AMutator mutator : mutators){
-            methodMutantData.addMutants(mutator.getMutants());
-        }
+//        for (AMutator mutator : mutators){
+//            methodMutantData.addMutants(mutator.getMutants());
+//        }
 
         arg.add(methodMutantData);
 

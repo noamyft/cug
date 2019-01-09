@@ -33,5 +33,9 @@ class Aug{
 		}
 		return 0;
 	}
+	
+	public void empty(){
+		int i;
+	}
 
 }

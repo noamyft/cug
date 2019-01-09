@@ -1,5 +1,6 @@
 package mutators;
 
+import com.github.javaparser.Range;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.BinaryExpr;
@@ -7,6 +8,9 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.sun.javafx.fxml.expression.BinaryExpression;
+import common.Change;
+import common.MutantLog;
+import javafx.util.Pair;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -24,15 +28,15 @@ public class CosMutator extends AMutator {
     List<BinaryExpr> allBinaryExpr;
 
     /*use these methonds in all mutators*/
-    public CosMutator(MethodDeclaration method){
+    public CosMutator(MutantLog method){
         this(method, Integer.MAX_VALUE);
     }
-    public CosMutator(MethodDeclaration method, int maxMutants) {
+    public CosMutator(MutantLog method, int maxMutants) {
         super(method,maxMutants);
 
         allBinaryExpr = new ArrayList<>();
 
-        getAllNodeOfClass(method, allBinaryExpr, BinaryExpr.class);
+        getAllNodeOfClass(method.getMutant(), allBinaryExpr, BinaryExpr.class);
 
         allBinaryExpr = allBinaryExpr.stream().filter(binaryExpr -> {
             BinaryExpr.Operator op_type = binaryExpr.getOperator();
@@ -44,25 +48,27 @@ public class CosMutator extends AMutator {
     /*use these methonds in all mutators - until here*/
 
     @Override
-    public HashSet<MethodDeclaration> getMutants() {
+    public HashSet<MutantLog> getMutants(Set<MethodDeclaration> existingMethods) {
 
-        Collections.shuffle(allBinaryExpr);
+//        Collections.shuffle(allBinaryExpr);
 
-        HashSet<MethodDeclaration> result = new HashSet<>();
+        HashSet<MutantLog> result = new HashSet<>();
 
         for (BinaryExpr b : allBinaryExpr){
             //limit the number of mutants
-            if (result.size() >= this.maxMutants) {
-                return result;
-            }
+//            if (result.size() >= this.maxMutants) {
+//                return result;
+//            }
 
-            result.add(generateMutant(b));
+            Pair<MethodDeclaration, Change> newResult = generateMutant(b);
+
+            addNewMutantLog(newResult.getKey(), newResult.getValue(), result, existingMethods);
         }
 
         return result;
     }
 
-    public MethodDeclaration generateMutant(BinaryExpr exp) {
+    public Pair<MethodDeclaration, Change> generateMutant(BinaryExpr exp) {
             /* here you need to make the desired mutation.
              after make the mutation, call addMutant (to add it to the list)
              and after that restore originalMethod to it original state
@@ -75,14 +81,18 @@ public class CosMutator extends AMutator {
         if ((op_type == BinaryExpr.Operator.PLUS) ||
                 (op_type == BinaryExpr.Operator.MULTIPLY))
         {
+
+            Range range = exp.getRange().get();
+            String oldValue = exp.toString();
             swapOperandsMutantGen(exp, left, right);
+            String newValue = exp.toString();
 
             /* add mutant and restore original method*/
-            MethodDeclaration mutant = originalMethod.clone();
+            MethodDeclaration mutant = cloneMethod(originalMutantLog.getMutant());
             exp.setLeft(left);
             exp.setRight(right);
 
-            return mutant;
+            return new Pair<>(mutant, new Change(range, oldValue, newValue));
         }
         throw new RuntimeException(this.getClass() + " must generate mutant! cannot reach here");
     }

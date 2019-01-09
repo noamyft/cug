@@ -16,7 +16,8 @@ import java.util.stream.Collectors;
 /**
  * Vnr mutator -
  */
-public class VnrMutator extends AMutator {
+@Deprecated
+public class VnrMutator {
 
     private Set<String> variables;
     private Set<String> allNames;
@@ -28,7 +29,7 @@ public class VnrMutator extends AMutator {
     }
 
     public VnrMutator(MethodDeclaration method, int maxMutants){
-        super(method,maxMutants);
+//        super(method,maxMutants);
         this.variables = new HashSet<>();
         this.allNames = new HashSet<>();
 
@@ -65,7 +66,6 @@ public class VnrMutator extends AMutator {
     }
     /*use these methonds in all mutators - until here*/
 
-    @Override
     public HashSet<MethodDeclaration> getMutants() {
             /* here you need to make the desired mutation.
              after make the mutation, call addMutant (to add it to the list)
@@ -73,32 +73,32 @@ public class VnrMutator extends AMutator {
              (the code before your changes) */
         HashSet<MethodDeclaration> result = new HashSet<>();
 
-        List<String> vars = new ArrayList<>(this.variables);
-        Collections.shuffle(vars);
-
-        for (String v : vars){
-            //limit the number of mutants
-            if (result.size() >= this.maxMutants) {
-                return result;
-            }
-
-            String newName = createNewName(v, this.allNames);
-            if (newName.equals(v)){
-                continue;
-            }
-            MethodDeclaration mutant = originalMethod.clone();
-            mutant.accept(new VoidVisitorAdapter<Void>() {
-                @Override
-                public void visit(SimpleName n, Void arg)
-                {
-                    if (n.getIdentifier().equals(v)){
-                        n.setIdentifier(newName);
-                    }
-                }
-            }, null);
-
-            result.add(mutant);
-        }
+//        List<String> vars = new ArrayList<>(this.variables);
+//        Collections.shuffle(vars);
+//
+//        for (String v : vars){
+//            //limit the number of mutants
+//            if (result.size() >= this.maxMutants) {
+//                return result;
+//            }
+//
+//            String newName = createNewName(v, this.allNames);
+//            if (newName.equals(v)){
+//                continue;
+//            }
+//            MethodDeclaration mutant = originalMethod.clone();
+//            mutant.accept(new VoidVisitorAdapter<Void>() {
+//                @Override
+//                public void visit(SimpleName n, Void arg)
+//                {
+//                    if (n.getIdentifier().equals(v)){
+//                        n.setIdentifier(newName);
+//                    }
+//                }
+//            }, null);
+//
+//            result.add(mutant);
+//        }
         return result;
     }
 
