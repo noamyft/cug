@@ -2,23 +2,17 @@ package mutators;
 
 import com.github.javaparser.Range;
 import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.Expression;
-import com.github.javaparser.ast.expr.VariableDeclarationExpr;
-import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import com.sun.javafx.fxml.expression.BinaryExpression;
 import common.Change;
+import common.MutantChangePair;
 import common.MutantLog;
-import javafx.util.Pair;
 
-import java.util.*;
-import java.util.function.Supplier;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
-
-import static com.github.javaparser.ast.expr.BinaryExpr.Operator.*;
-import static com.github.javaparser.ast.expr.BinaryExpr.Operator.GREATER;
-import static com.github.javaparser.ast.expr.BinaryExpr.Operator.GREATER_EQUALS;
 
 /**
  * Cos mutator - swap operands in commutative operations
@@ -60,15 +54,15 @@ public class CosMutator extends AMutator {
 //                return result;
 //            }
 
-            Pair<MethodDeclaration, Change> newResult = generateMutant(b);
+            MutantChangePair newResult = generateMutant(b);
 
-            addNewMutantLog(newResult.getKey(), newResult.getValue(), result, existingMethods);
+            addNewMutantLog(newResult.getMutant(), newResult.getChange(), result, existingMethods);
         }
 
         return result;
     }
 
-    public Pair<MethodDeclaration, Change> generateMutant(BinaryExpr exp) {
+    public MutantChangePair generateMutant(BinaryExpr exp) {
             /* here you need to make the desired mutation.
              after make the mutation, call addMutant (to add it to the list)
              and after that restore originalMethod to it original state
@@ -92,13 +86,12 @@ public class CosMutator extends AMutator {
             exp.setLeft(left);
             exp.setRight(right);
 
-            return new Pair<>(mutant, new Change(range, oldValue, newValue));
+            return new MutantChangePair(mutant, new Change(range, oldValue, newValue));
         }
         throw new RuntimeException(this.getClass() + " must generate mutant! cannot reach here");
     }
 
     private void swapOperandsMutantGen(BinaryExpr exp, Expression left, Expression right) {
-        BinaryExpression mutant;
 
         exp.setRight(left);
         exp.setLeft(right);

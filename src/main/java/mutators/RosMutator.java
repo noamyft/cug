@@ -5,15 +5,14 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.BinaryExpr.Operator;
 import com.github.javaparser.ast.expr.Expression;
-import com.github.javaparser.ast.stmt.IfStmt;
-import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import com.sun.javafx.fxml.expression.BinaryExpression;
 import common.Change;
+import common.MutantChangePair;
 import common.MutantLog;
-import javafx.util.Pair;
 
-import java.util.*;
-import java.util.function.Supplier;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.github.javaparser.ast.expr.BinaryExpr.Operator.*;
@@ -62,16 +61,16 @@ public class RosMutator extends AMutator {
 //                return result;
 //            }
 
-            Pair<MethodDeclaration, Change> newResult = generateMutant(b);
+            MutantChangePair newResult = generateMutant(b);
 
-            addNewMutantLog(newResult.getKey(), newResult.getValue(), result, existingMethods);
+            addNewMutantLog(newResult.getMutant(), newResult.getChange(), result, existingMethods);
 
         }
 
         return result;
     }
 
-    private Pair<MethodDeclaration, Change> generateMutant(BinaryExpr exp) {
+    private MutantChangePair generateMutant(BinaryExpr exp) {
             /* here you need to make the desired mutation.
              after make the mutation, call addMutant (to add it to the list)
              and after that restore originalMethod to it original state
@@ -100,14 +99,13 @@ public class RosMutator extends AMutator {
             exp.setRight(right);
             exp.setOperator(op_type);
 
-            return new Pair<>(mutant, new Change(range, oldValue, newValue));
+            return new MutantChangePair(mutant, new Change(range, oldValue, newValue));
         }
 
         throw new RuntimeException(this.getClass() + " must generate mutant! cannot reach here");
     }
 
     private void swapRelationalOperandsMutantGen(BinaryExpr exp, Expression left, Expression right, BinaryExpr.Operator op_type) {
-        BinaryExpression mutant;
 
         /**
          * the traditional ROR implementation

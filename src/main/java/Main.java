@@ -12,11 +12,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Calendar;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
@@ -213,6 +210,7 @@ public class Main {
         // creates an input stream for the file to be parsed
         MethodMutantData methodMutantData = null;
         try {
+            ;
             methodMutantData = new MutantFileIO().loadMutantData(file);
         } catch (IOException e) {
             System.out.println("ERROR mutate: " + file.toString());
@@ -225,7 +223,6 @@ public class Main {
 //        if (methodMutantData.getRequestedMutationLevel() > methodMutantData.getActualMutationLevel()){
 //            return;
 //        }
-
         MethodMutantData newMethodMutantData = generateMutationsToMethod(methodMutantData, config);
 
         if (newMethodMutantData == null){
@@ -252,14 +249,18 @@ public class Main {
 
         int oldRequestedMutationLevel = methodMutantData.getRequestedMutationLevel();
         //check if we already developed to this level
+
         if (oldRequestedMutationLevel >= config.MutationLevel){
+//            System.out.println("old bigger");
             return null;
         } else {
             methodMutantData.setRequestedMutationLevel(config.MutationLevel);
+//            System.out.println(methodMutantData.getRequestedMutationLevel());
         }
 
         //check if we cant mutate this file anymore
         if (oldRequestedMutationLevel > methodMutantData.getActualMutationLevel()){
+//            System.out.println("wasted");
             return methodMutantData;
         }
 
@@ -283,13 +284,16 @@ public class Main {
                     .collect(Collectors.toSet());
         }
 
+//        System.out.println("init complete");
+
         for (int i=startFormLevel + 1; i <= config.MutationLevel; i++) {
+//            System.out.println("i"+ i);
             Set<MutantLog> newMutants =
                     lastLevelMethods.stream()
                             .flatMap(mutantLog -> new MethodMutationsGenerator(config)
                                     .generateMutants(mutantLog, existingMethods).stream())
                             .collect(Collectors.toSet());
-
+//            System.out.println("i_d"+ i);
             if (newMutants.isEmpty()) {
                 break;
             } else {
@@ -300,6 +304,7 @@ public class Main {
             lastLevelMethods = newMutants;
         }
 
+//        System.out.println("done with:" + Integer.toString(methodMutantData.getMutants().size()));
         return methodMutantData;
 
     }
