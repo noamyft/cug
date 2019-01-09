@@ -18,7 +18,7 @@ public class MethodMutationsGenerator {
     }
 
     public Set<MutantLog> generateMutants(MutantLog mutantLog, Set<MethodDeclaration> existingMethods){
-        System.out.println("generate mutants hi!");
+
         Set<MethodDeclaration> methods = new HashSet<>();
         Set<MutantLog> result = new HashSet<>();
 
@@ -28,12 +28,12 @@ public class MethodMutationsGenerator {
                         new CosMutator(mutantLog)};
 
         for (AMutator mutator : mutators){
-            System.out.println(mutator);
+
             result.addAll(mutator.getMutants(existingMethods));
 
         }
 
-        System.out.println("generate mutants bye!");
+
         return result;
     }
 
