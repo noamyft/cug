@@ -5,14 +5,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import common.MethodMutantData;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 
 public class MutantFileIO {
 
@@ -29,7 +24,7 @@ public class MutantFileIO {
 
     }
 
-    public MethodMutantData loadMutantData(Path Path) throws IOException {
+    public MethodMutantData loadMutantData(Path Path) throws IOException, RuntimeException {
 
         String content = new String(Files.readAllBytes(Path));
         Gson gson = new GsonBuilder()

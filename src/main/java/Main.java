@@ -118,6 +118,10 @@ public class Main {
             System.out.println("ERROR output: " + file.toString());
             e.printStackTrace();
             return;
+        }  catch (RuntimeException e){
+            System.out.println("ERROR output: " + file.toString());
+            e.printStackTrace();
+            return;
         }
         //if there are no mutants in this level
         if (from > methodMutantData.getActualMutationLevel()){
@@ -217,6 +221,10 @@ public class Main {
             ;
             methodMutantData = new MutantFileIO().loadMutantData(file);
         } catch (IOException e) {
+            System.out.println("ERROR mutate: " + file.toString());
+            e.printStackTrace();
+            return;
+        } catch (RuntimeException e){
             System.out.println("ERROR mutate: " + file.toString());
             e.printStackTrace();
             return;
