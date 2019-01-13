@@ -109,6 +109,8 @@ public class Main {
 
     private static void outputMutantsFromFile(Path outputFolder, Path file, int from, int to) {
 
+        System.out.println("output: " + file.toString());
+
         MethodMutantData methodMutantData = null;
         try {
             methodMutantData = new MutantFileIO().loadMutantData(file);
@@ -154,24 +156,26 @@ public class Main {
             Path methodFolder = Paths.get(outputFolder.toAbsolutePath().toString(), "level" + i.toString(),
                     folderName, "src");
             methodFolder.toFile().mkdirs();
-            File f = Paths.get(methodFolder.toAbsolutePath().toString(),
-                    methodMutantData.getMethodName() + ".java").toFile();
 
-            try (PrintWriter writer = new PrintWriter(f, "UTF-8")) {
-                Set<MethodDeclaration> mutants = methodMutantData.getMutants().stream()
-                        .filter(mutantLog -> mutantLog.getMutationLevel() == currentLevel)
-                        .map(mutantLog -> mutantLog.getMutant())
-                        .collect(Collectors.toSet());
-
-                for (MethodDeclaration md : mutants) {
+            Set<MethodDeclaration> mutants = methodMutantData.getMutants().stream()
+                    .filter(mutantLog -> mutantLog.getMutationLevel() == currentLevel)
+                    .map(mutantLog -> mutantLog.getMutant())
+                    .collect(Collectors.toSet());
+            long j = 0;
+            for (MethodDeclaration md : mutants) {
+                File f = Paths.get(methodFolder.toAbsolutePath().toString(),
+                        methodMutantData.getMethodName() + "__mut" + j + ".java").toFile();
+                j++;
+                try (PrintWriter writer = new PrintWriter(f, "UTF-8")) {
                     writer.println(md);
+
+                } catch (FileNotFoundException e) {
+                    System.out.println("ERROR output: " + file.toString());
+                    e.printStackTrace();
+                } catch (UnsupportedEncodingException e) {
+                    System.out.println("ERROR output: " + file.toString());
+                    e.printStackTrace();
                 }
-            } catch (FileNotFoundException e) {
-                System.out.println("ERROR output: " + file.toString());
-                e.printStackTrace();
-            } catch (UnsupportedEncodingException e) {
-                System.out.println("ERROR output: " + file.toString());
-                e.printStackTrace();
             }
         }
     }

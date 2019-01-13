@@ -9,6 +9,7 @@ C:\Users\snyefet\IdeaProjects\cug\src\main\java\MethodMutationsGenerator.java
 C:\Users\snyefet\IdeaProjects\cug\src\main\java\common\CommandLineValues.java
 C:\Users\snyefet\IdeaProjects\cug\src\main\java\mutators\CosMutator.java
 C:\Users\snyefet\IdeaProjects\cug\src\main\java\mutators\AMutator.java
+C:\Users\snyefet\IdeaProjects\cug\src\main\java\common\MutantChangePair.java
 C:\Users\snyefet\IdeaProjects\cug\src\main\java\mutators\RosMutator.java
 C:\Users\snyefet\IdeaProjects\cug\src\main\java\serialization\MutantFileIO.java
 C:\Users\snyefet\IdeaProjects\cug\src\main\java\MethodVisitor.java
