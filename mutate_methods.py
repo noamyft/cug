@@ -18,6 +18,5 @@ if __name__ == "__main__":
     mypath = sys.argv[1]
     alldirs = [os.path.join(mypath, f).replace("\\", "/") for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
 
-    print(alldirs)
     pool = mp.Pool(processes=mp.cpu_count())
     pool.map(mutate_file, alldirs)
