@@ -2,6 +2,7 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import com.google.gson.Gson;
 import common.CommandLineValues;
 import common.MethodMutantData;
 import common.MutantLog;
@@ -14,13 +15,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
+
+import static org.apache.commons.math3.util.ArithmeticUtils.binomialCoefficient;
 
 public class Main {
 
@@ -128,6 +129,7 @@ public class Main {
             return;
         }
 
+        MethodMutationsGenerator generator = new MethodMutationsGenerator(methodMutantData.getOriginalMethod());
         String filename = file.getFileName().toString();
         String folderName = filename.substring(0, filename.length() - new String(".jsondat").length());
 
@@ -157,22 +159,29 @@ public class Main {
         to = Math.min(methodMutantData.getActualMutationLevel(), to);
         for (Integer i = from; i <= to; i++){
             final int currentLevel = i;
+            // create src dir
             Path methodFolder = Paths.get(outputFolder.toAbsolutePath().toString(), "level" + i.toString(),
                     folderName, "src");
             methodFolder.toFile().mkdirs();
+            // create mutation code dir
+            Path methodCodeFolder = Paths.get(outputFolder.toAbsolutePath().toString(), "level" + i.toString(),
+                    folderName, "mutcode");
+            methodCodeFolder.toFile().mkdirs();
 
-            Set<MethodDeclaration> mutants = methodMutantData.getMutants().stream()
-                    .filter(mutantLog -> mutantLog.getMutationLevel() == currentLevel)
-                    .map(mutantLog -> mutantLog.getMutant())
+            Set<Set<Integer>> mutantsCodes = methodMutantData.getMutants().stream()
+                    .filter(integers -> integers.size() == currentLevel)
                     .collect(Collectors.toSet());
             long j = 0;
-            for (MethodDeclaration md : mutants) {
+            for (Set<Integer> md : mutantsCodes) {
                 File f = Paths.get(methodFolder.toAbsolutePath().toString(),
                         methodMutantData.getMethodName() + "__mut" + j + ".java").toFile();
-                j++;
-                try (PrintWriter writer = new PrintWriter(f, "UTF-8")) {
-                    writer.println(md);
+                File f_mutcode = Paths.get(methodCodeFolder.toAbsolutePath().toString(),
+                        methodMutantData.getMethodName() + "__mut" + j + ".mutcode").toFile();
 
+                try (PrintWriter writer = new PrintWriter(f, "UTF-8");
+                     PrintWriter writer_mutcode = new PrintWriter(f_mutcode, "UTF-8")) {
+                    writer.println(generator.generateMutantByVector(md));
+                    writer_mutcode.println(new Gson().toJson(md));
                 } catch (FileNotFoundException e) {
                     System.out.println("ERROR output: " + file.toString());
                     e.printStackTrace();
@@ -180,6 +189,7 @@ public class Main {
                     System.out.println("ERROR output: " + file.toString());
                     e.printStackTrace();
                 }
+                j++;
             }
         }
     }
@@ -218,7 +228,7 @@ public class Main {
         // creates an input stream for the file to be parsed
         MethodMutantData methodMutantData = null;
         try {
-            ;
+
             methodMutantData = new MutantFileIO().loadMutantData(file);
         } catch (IOException e) {
             System.out.println("ERROR mutate: " + file.toString());
@@ -259,64 +269,52 @@ public class Main {
     private static MethodMutantData generateMutationsToMethod(MethodMutantData methodMutantData,
                                                               CommandLineValues config) {
 
-        int oldRequestedMutationLevel = methodMutantData.getRequestedMutationLevel();
-        //check if we already developed to this level
+//        int oldRequestedMutationLevel = methodMutantData.getRequestedMutationLevel();
+//        //check if we already developed to this level
+//
+//        if (oldRequestedMutationLevel >= config.MutationLevel){
+//            return null;
+//        } else {
+//
+//        }
 
-        if (oldRequestedMutationLevel >= config.MutationLevel){
-//            System.out.println("old bigger");
-            return null;
-        } else {
-            methodMutantData.setRequestedMutationLevel(config.MutationLevel);
-//            System.out.println(methodMutantData.getRequestedMutationLevel());
-        }
+//        //check if we cant mutate this file anymore
+//        if (oldRequestedMutationLevel > methodMutantData.getActualMutationLevel()){
+//            return methodMutantData;
+//        }
 
-        //check if we cant mutate this file anymore
-        if (oldRequestedMutationLevel > methodMutantData.getActualMutationLevel()){
-//            System.out.println("wasted");
-            return methodMutantData;
-        }
+        int mutationVectorSize = new MethodMutationsGenerator(methodMutantData.getOriginalMethod(), config).getMutationsCount();
+        int actualMutationLevel = Math.min(mutationVectorSize, config.MutationLevel);
 
 
-        final int startFormLevel = methodMutantData.getActualMutationLevel();
-        //create set of existing mutants
-        Set<MethodDeclaration> existingMethods =
-                methodMutantData.getMutants().stream().map(MutantLog::getMutant)
-//                        .map(MethodDeclaration::toString)
-                        .collect(Collectors.toSet());
-        existingMethods.add(methodMutantData.getOriginalMethod());
-
-        //get the last level
-        Set<MutantLog> lastLevelMethods;
-        if (startFormLevel == 0){
-            lastLevelMethods = new HashSet<MutantLog>();
-            lastLevelMethods.add(new MutantLog(methodMutantData.getOriginalMethod()));
-        } else {
-            lastLevelMethods = methodMutantData.getMutants().stream()
-                    .filter(mutantLog -> mutantLog.getMutationLevel() == startFormLevel)
-                    .collect(Collectors.toSet());
-        }
-
-//        System.out.println("init complete");
-
-        for (int i=startFormLevel + 1; i <= config.MutationLevel; i++) {
-//            System.out.println("i"+ i);
-            Set<MutantLog> newMutants =
-                    lastLevelMethods.stream()
-                            .flatMap(mutantLog -> new MethodMutationsGenerator(config)
-                                    .generateMutants(mutantLog, existingMethods).stream())
+        for (int i= 1; i <= actualMutationLevel; i++) {
+            final int currentLevel = i;
+            Set<Set<Integer>> mutants =
+                    methodMutantData.getMutants().stream()
+                            .filter( integers -> integers.size() == currentLevel)
                             .collect(Collectors.toSet());
-//            System.out.println("i_d"+ i);
-            if (newMutants.isEmpty()) {
-                break;
-            } else {
-                methodMutantData.setActualMutationLevel(i);
-            }
 
-            methodMutantData.addMutantToLog(newMutants);
-            lastLevelMethods = newMutants;
+            if (config.MutationCount < mutants.size()){
+                int totalMutantsToremove = mutants.size() - config.MutationCount;
+                for (Set<Integer> vec : mutants){
+                    if (totalMutantsToremove == 0){
+                        break;
+                    }
+                    methodMutantData.getMutants().remove(vec);
+                    totalMutantsToremove--;
+                }
+            } else {
+                // generate new mutants (only if we didn't generate all the n-choose-k possibilities)
+                if (binomialCoefficient(mutationVectorSize, currentLevel) > mutants.size()) {
+                    vectorCombinationUtil(mutationVectorSize, currentLevel, mutants, config.MutationCount);
+                    methodMutantData.addMutantToLog(mutants);
+                }
+            }
         }
 
-//        System.out.println("done with:" + Integer.toString(methodMutantData.getMutants().size()));
+        methodMutantData.setActualMutationLevel(actualMutationLevel);
+        methodMutantData.setRequestedMutationLevel(config.MutationLevel);
+
         return methodMutantData;
 
     }
@@ -370,6 +368,12 @@ public class Main {
                 super.visit(n, arg);
             }
         }, methods);
+
+        //filter method without mutants (vector size == 0)
+        methods = methods.stream()
+                .filter(methodDeclaration ->
+                        new MethodMutationsGenerator(methodDeclaration).getMutationsCount() > 0)
+                .collect(Collectors.toSet());
 
         //output to files
         for (MethodDeclaration m : methods){
@@ -427,6 +431,53 @@ public class Main {
             methodFolder = Paths.get(outputFolder.toAbsolutePath().toString(), originalName.toLowerCase() + "__" + i + ".jsondat");
         }
         return methodFolder;
+    }
+
+
+    // The main function that prints all combinations of size r
+    // in arr[] of size n. This function mainly uses combinationUtil()
+    static void vectorCombinationUtil(int n, int r, Set<Set<Integer>> result, int resultLimit)
+    {
+        // A temporary array to store all combination one by one
+        List<Integer> data = Arrays.asList(new Integer[r]);
+        List<Integer> arr = new ArrayList<>();
+        for (int i = 0; i < n; i++){
+            arr.add(i);
+        }
+        Collections.shuffle(arr);
+
+        // Print all combination using temprary array 'data[]'
+        vectorCombinationUtil_rec(arr, data, 0, n-1, 0, r, result, resultLimit);
+    }
+
+    static void vectorCombinationUtil_rec(List<Integer> arr, List<Integer> data, int start,
+                                int end, int index, int r, Set<Set<Integer>> result, int resultLimit)
+    {
+        // we generated the amount of requested vectors - exit
+        if (result.size() == resultLimit){
+            return;
+        }
+
+        // Current combination is ready to be printed, print it
+        if (index == r)
+        {
+            result.add(new HashSet<>(data));
+            return;
+        }
+
+        // replace index with all possible elements. The condition
+        // "end-i+1 >= r-index" makes sure that including one element
+        // at index will make a combination with remaining elements
+        // at remaining positions
+        for (int i=start; i<=end && end-i+1 >= r-index; i++)
+        {
+            data.set(index, arr.get(i));
+            vectorCombinationUtil_rec(arr, data, i+1, end, index+1, r, result, resultLimit);
+            // we generated the amount of requested vectors - exit
+            if (result.size() == resultLimit){
+                return;
+            }
+        }
     }
 
 

@@ -32,6 +32,9 @@ public class CommandLineValues {
     @Option(name = "--mutation_level", required = false)
     public Integer MutationLevel = 1;
 
+    @Option(name = "--mutation_count", required = false)
+    public Integer MutationCount = 1;
+
 //    @Option(name = "--no_hash", required = false)
 //    public boolean NoHash = false;
 //

@@ -1,6 +1,7 @@
 package mutators;
 
 import com.github.javaparser.Range;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.BinaryExpr.Operator;
@@ -25,15 +26,15 @@ public class RosMutator extends AMutator {
     List<BinaryExpr> allBinaryExpr;
 
     /*use these methonds in all mutators*/
-    public RosMutator(MutantLog method){
+    public RosMutator(MethodDeclaration method){
         this(method, Integer.MAX_VALUE);
     }
-    public RosMutator(MutantLog method, int maxMutants) {
+    public RosMutator(MethodDeclaration method, int maxMutants) {
         super(method,maxMutants);
 
         allBinaryExpr = new ArrayList<>();
 
-        getAllNodeOfClass(method.getMutant(), allBinaryExpr, BinaryExpr.class);
+        getAllNodeOfClass(method, allBinaryExpr, BinaryExpr.class);
 
         allBinaryExpr = allBinaryExpr.stream().filter(binaryExpr -> {
             BinaryExpr.Operator op_type = binaryExpr.getOperator();
@@ -45,6 +46,7 @@ public class RosMutator extends AMutator {
                     (op_type == LESS_EQUALS));
         }).collect(Collectors.toList());
 
+        setAvailableMutations(allBinaryExpr);
     }
     /*use these methonds in all mutators - until here*/
 
@@ -70,6 +72,35 @@ public class RosMutator extends AMutator {
         return result;
     }
 
+    @Override
+    public MutantChangePair mutantMethod(Node nodeToMutate) {
+
+        assert nodeToMutate instanceof BinaryExpr;
+        BinaryExpr exp = (BinaryExpr) nodeToMutate;
+
+        Expression left = exp.getLeft();
+        Expression right = exp.getRight();
+        BinaryExpr.Operator op_type = exp.getOperator();
+
+        if ((op_type == EQUALS) ||
+                (op_type == NOT_EQUALS) ||
+                (op_type == GREATER) ||
+                (op_type == GREATER_EQUALS) ||
+                (op_type == LESS) ||
+                (op_type == LESS_EQUALS))
+        {
+            Range range = exp.getRange().get();
+            String oldValue = exp.toString();
+            swapRelationalOperandsMutantGen(exp, left, right, op_type);
+            String newValue = exp.toString();
+
+            return new MutantChangePair(originalMethod, new Change(range, oldValue, newValue));
+        }
+
+        throw new RuntimeException(this.getClass() + " must generate mutant! cannot reach here");
+    }
+
+    @Deprecated
     private MutantChangePair generateMutant(BinaryExpr exp) {
             /* here you need to make the desired mutation.
              after make the mutation, call addMutant (to add it to the list)
@@ -94,7 +125,7 @@ public class RosMutator extends AMutator {
             String newValue = exp.toString();
 
             /* add mutant and restore original method*/
-            MethodDeclaration mutant = cloneMethod(originalMutantLog.getMutant());
+            MethodDeclaration mutant = cloneMethod(originalMethod);
             exp.setLeft(left);
             exp.setRight(right);
             exp.setOperator(op_type);
