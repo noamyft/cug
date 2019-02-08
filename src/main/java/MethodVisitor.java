@@ -4,12 +4,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import common.CommandLineValues;
 import common.MethodMutantData;
-import mutators.AMutator;
-import mutators.CosMutator;
-import mutators.RosMutator;
-import mutators.VnrMutator;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -35,7 +30,7 @@ public class MethodVisitor extends VoidVisitorAdapter<List<MethodMutantData>>  {
 //        AMutator[] mutators = new AMutator[]
 //                {new RosMutator(n, config.MaxMutantsPerMutator),
 //                        new CosMutator(n, config.MaxMutantsPerMutator),
-//                        new VnrMutator(n, config.MaxMutantsPerMutator)};
+//                        new SnrMutator(n, config.MaxMutantsPerMutator)};
 
 //        for (AMutator mutator : mutators){
 //            methodMutantData.addMutants(mutator.getMutants());

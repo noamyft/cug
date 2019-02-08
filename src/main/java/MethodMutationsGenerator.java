@@ -6,6 +6,7 @@ import common.MutatorAstnodePair;
 import mutators.AMutator;
 import mutators.CosMutator;
 import mutators.RosMutator;
+import mutators.SnrMutator;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -37,14 +38,14 @@ public class MethodMutationsGenerator {
 
         //TODO add mutators here
         this.mutators = new AMutator[]
-                {new RosMutator(method),
-                        new CosMutator(method)};
+                {new RosMutator(),
+                        new CosMutator(), new SnrMutator()};
 
         List<MutatorAstnodePair> mutationsVec = new ArrayList<>();
 
         for (AMutator mutator : mutators){
 
-            List<Node> mutations = mutator.getAvailableMutations();
+            List<? extends Node> mutations = mutator.getAvailableMutations(method);
             for (Node n : mutations) {
                 mutationsVec.add(new MutatorAstnodePair(mutator, n));
             }
@@ -61,7 +62,7 @@ public class MethodMutationsGenerator {
         for (Integer mutationIndex : selectedMutations){
             AMutator mutator = mutantMutationsVector.get(mutationIndex).getMutator();
             Node changedNode = mutantMutationsVector.get(mutationIndex).getChangeNode();
-            mutant = mutator.mutantMethod(changedNode).getMutant();
+            mutant = mutator.mutantMethod(mutant, changedNode).getMutant();
         }
 
         return mutant;
