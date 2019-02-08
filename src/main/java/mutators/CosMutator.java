@@ -24,16 +24,55 @@ import static com.github.javaparser.ast.expr.BinaryExpr.Operator.LESS_EQUALS;
  */
 public class CosMutator extends AMutator {
 
-    List<BinaryExpr> allBinaryExpr;
+//    List<BinaryExpr> allBinaryExpr;
 
     /*use these methonds in all mutators*/
-    public CosMutator(MethodDeclaration method){
-        this(method, Integer.MAX_VALUE);
-    }
-    public CosMutator(MethodDeclaration method, int maxMutants) {
-        super(method,maxMutants);
+//    public CosMutator(MethodDeclaration method){
+//        this(method, Integer.MAX_VALUE);
+//    }
+//    public CosMutator(MethodDeclaration method, int maxMutants) {
+//        super(method,maxMutants);
+//
+//        allBinaryExpr = new ArrayList<>();
+//
+//        getAllNodeOfClass(method, allBinaryExpr, BinaryExpr.class);
+//
+//        allBinaryExpr = allBinaryExpr.stream().filter(binaryExpr -> {
+//            BinaryExpr.Operator op_type = binaryExpr.getOperator();
+//            return ((op_type == BinaryExpr.Operator.PLUS) ||
+//                    (op_type == BinaryExpr.Operator.MULTIPLY));
+//        }).collect(Collectors.toList());
+//
+//        setAvailableMutations(allBinaryExpr);
+//
+//    }
+    /*use these methonds in all mutators - until here*/
 
-        allBinaryExpr = new ArrayList<>();
+//    @Override
+//    public HashSet<MutantLog> getMutants(Set<MethodDeclaration> existingMethods) {
+//
+////        Collections.shuffle(allBinaryExpr);
+//
+//        HashSet<MutantLog> result = new HashSet<>();
+//
+//        for (BinaryExpr b : allBinaryExpr){
+//            //limit the number of mutants
+////            if (result.size() >= this.maxMutants) {
+////                return result;
+////            }
+//
+//            MutantChangePair newResult = generateMutant(b);
+//
+//            addNewMutantLog(newResult.getMutant(), newResult.getChange(), result, existingMethods);
+//        }
+//
+//        return result;
+//    }
+
+
+    @Override
+    public List<BinaryExpr> getAvailableMutations(MethodDeclaration method) {
+        List<BinaryExpr> allBinaryExpr = new ArrayList<>();
 
         getAllNodeOfClass(method, allBinaryExpr, BinaryExpr.class);
 
@@ -43,34 +82,11 @@ public class CosMutator extends AMutator {
                     (op_type == BinaryExpr.Operator.MULTIPLY));
         }).collect(Collectors.toList());
 
-        setAvailableMutations(allBinaryExpr);
-
-    }
-    /*use these methonds in all mutators - until here*/
-
-    @Override
-    public HashSet<MutantLog> getMutants(Set<MethodDeclaration> existingMethods) {
-
-//        Collections.shuffle(allBinaryExpr);
-
-        HashSet<MutantLog> result = new HashSet<>();
-
-        for (BinaryExpr b : allBinaryExpr){
-            //limit the number of mutants
-//            if (result.size() >= this.maxMutants) {
-//                return result;
-//            }
-
-            MutantChangePair newResult = generateMutant(b);
-
-            addNewMutantLog(newResult.getMutant(), newResult.getChange(), result, existingMethods);
-        }
-
-        return result;
+        return allBinaryExpr;
     }
 
     @Override
-    public MutantChangePair mutantMethod(Node nodeToMutate) {
+    public MutantChangePair mutantMethod(MethodDeclaration method, Node nodeToMutate) {
 
         assert nodeToMutate instanceof BinaryExpr;
         BinaryExpr exp = (BinaryExpr) nodeToMutate;
@@ -88,40 +104,40 @@ public class CosMutator extends AMutator {
             swapOperandsMutantGen(exp, left, right);
             String newValue = exp.toString();
 
-            return new MutantChangePair(originalMethod, new Change(range, oldValue, newValue));
+            return new MutantChangePair(method, new Change(range, oldValue, newValue));
         }
         throw new RuntimeException(this.getClass() + " must generate mutant! cannot reach here");
     }
 
-    @Deprecated
-    private MutantChangePair generateMutant(BinaryExpr exp) {
-            /* here you need to make the desired mutation.
-             after make the mutation, call addMutant (to add it to the list)
-             and after that restore originalMethod to it original state
-             (the code before your changes) */
-
-        Expression left = exp.getLeft();
-        Expression right = exp.getRight();
-        BinaryExpr.Operator op_type = exp.getOperator();
-
-        if ((op_type == BinaryExpr.Operator.PLUS) ||
-                (op_type == BinaryExpr.Operator.MULTIPLY))
-        {
-
-            Range range = exp.getRange().get();
-            String oldValue = exp.toString();
-            swapOperandsMutantGen(exp, left, right);
-            String newValue = exp.toString();
-
-            /* add mutant and restore original method*/
-            MethodDeclaration mutant = cloneMethod(originalMethod);
-            exp.setLeft(left);
-            exp.setRight(right);
-
-            return new MutantChangePair(mutant, new Change(range, oldValue, newValue));
-        }
-        throw new RuntimeException(this.getClass() + " must generate mutant! cannot reach here");
-    }
+//    @Deprecated
+//    private MutantChangePair generateMutant(BinaryExpr exp) {
+//            /* here you need to make the desired mutation.
+//             after make the mutation, call addMutant (to add it to the list)
+//             and after that restore originalMethod to it original state
+//             (the code before your changes) */
+//
+//        Expression left = exp.getLeft();
+//        Expression right = exp.getRight();
+//        BinaryExpr.Operator op_type = exp.getOperator();
+//
+//        if ((op_type == BinaryExpr.Operator.PLUS) ||
+//                (op_type == BinaryExpr.Operator.MULTIPLY))
+//        {
+//
+//            Range range = exp.getRange().get();
+//            String oldValue = exp.toString();
+//            swapOperandsMutantGen(exp, left, right);
+//            String newValue = exp.toString();
+//
+//            /* add mutant and restore original method*/
+//            MethodDeclaration mutant = cloneMethod(originalMethod);
+//            exp.setLeft(left);
+//            exp.setRight(right);
+//
+//            return new MutantChangePair(mutant, new Change(range, oldValue, newValue));
+//        }
+//        throw new RuntimeException(this.getClass() + " must generate mutant! cannot reach here");
+//    }
 
     private void swapOperandsMutantGen(BinaryExpr exp, Expression left, Expression right) {
 

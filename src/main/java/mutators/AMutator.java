@@ -16,19 +16,20 @@ public abstract class AMutator {
     final String classPrefix = "public class Test {";
     final String classSuffix = "}";
 
-    protected int maxMutants;
-    protected MethodDeclaration originalMethod;
-    protected List<Node> availableMutations;
+//    protected int maxMutants;
+//    protected MethodDeclaration originalMethod;
+//    protected List<Node> availableMutations;
 //    private HashSet<MethodDeclaration> mutants;
 
-    public AMutator(MethodDeclaration mutant, int maxMutants){
-        this.originalMethod = mutant;
-        this.maxMutants = maxMutants;
-        this.availableMutations = new ArrayList<>();
-    }
 
-    @Deprecated
-    public abstract HashSet<MutantLog>  getMutants(Set<MethodDeclaration> existingMethods);
+//    public AMutator(MethodDeclaration mutant, int maxMutants){
+//        this.originalMethod = mutant;
+//        this.maxMutants = maxMutants;
+//        this.availableMutations = new ArrayList<>();
+//    }
+
+//    @Deprecated
+//    public abstract HashSet<MutantLog>  getMutants(Set<MethodDeclaration> existingMethods);
 
     /**
      * this methos mutate in-place (and override the original method)
@@ -36,19 +37,17 @@ public abstract class AMutator {
      * @param nodeToMutate
      * @return
      */
-    public abstract MutantChangePair mutantMethod(Node nodeToMutate);
+    public abstract MutantChangePair mutantMethod(MethodDeclaration method, Node nodeToMutate);
 
 
-    public List<Node>  getAvailableMutations(){
-        return availableMutations;
-    };
+    public abstract List<? extends Node> getAvailableMutations(MethodDeclaration method);
 
-    public void setAvailableMutations(List<? extends Node> availableMutations) {
-        this.availableMutations.clear();
-        this.availableMutations.addAll(availableMutations);
-    }
+//    public void setAvailableMutations(List<? extends Node> availableMutations) {
+//        this.availableMutations.clear();
+//        this.availableMutations.addAll(availableMutations);
+//    }
 
-    protected static<T extends Node> void getAllNodeOfClass(Node node, List<T> result, Class<T> nodeCls){
+    protected static<T extends Node> void getAllNodeOfClass(Node node, List<? super T> result, Class<T> nodeCls){
         if (node.getClass().equals(nodeCls)){
             result.add((T)node);
         }

@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 /**
  * Vnr mutator -
  */
-@Deprecated
+
 public class VnrMutator {
 
     private Set<String> variables;
