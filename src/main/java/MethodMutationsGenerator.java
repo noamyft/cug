@@ -39,7 +39,7 @@ public class MethodMutationsGenerator {
         //TODO add mutators here
         this.mutators = new AMutator[]
                 {new RosMutator(),
-                        new CosMutator(), new SnrMutator()};
+                        new CosMutator()/*, new SnrMutator()*/};
 
         List<MutatorAstnodePair> mutationsVec = new ArrayList<>();
 
